@@ -29,7 +29,8 @@ body {
   width: 100%;
   height: 100%;
   overflow: hidden;
-  background: var(--bg-primary);
+  background: #e8ecf4 !important;
+  color-scheme: light !important;
   font-family: 'Outfit', sans-serif;
   color: var(--text-primary);
   -webkit-font-smoothing: antialiased;
