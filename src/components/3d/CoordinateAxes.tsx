@@ -24,6 +24,7 @@ export function CoordinateAxes({ size }: AxesProps) {
   const labelOffset = 0.6;
   const showSlice = useGameStore((s) => s.showSlice);
   const sliceAxis = useGameStore((s) => s.sliceAxis);
+  const sliceIndex = useGameStore((s) => s.sliceIndex);
 
   // 每條軸獨立幾何
   const geos = useMemo(() => {
@@ -92,21 +93,25 @@ export function CoordinateAxes({ size }: AxesProps) {
             </Html>
 
             {/* 刻度數字 */}
-            {Array.from({ length: size }).map((_, i) => (
-              <Html key={`${ax.axis}-${i}`} position={tickPositions[idx](i)} center style={{ pointerEvents: 'none' }}>
-                <div
-                  style={{
-                    color: tickColor,
-                    fontSize: tickFontSize,
-                    fontWeight: isActive ? 600 : 400,
-                    fontFamily: "'JetBrains Mono', monospace",
-                    transition: 'all 0.3s ease',
-                  }}
-                >
-                  {i}
-                </div>
-              </Html>
-            ))}
+            {Array.from({ length: size }).map((_, i) => {
+              const isCurrent = isActive && i === sliceIndex;
+              return (
+                <Html key={`${ax.axis}-${i}`} position={tickPositions[idx](i)} center style={{ pointerEvents: 'none' }}>
+                  <div
+                    style={{
+                      color: isCurrent ? ax.colorBright : tickColor,
+                      fontSize: isCurrent ? '14px' : tickFontSize,
+                      fontWeight: isCurrent ? 800 : isActive ? 600 : 400,
+                      fontFamily: "'JetBrains Mono', monospace",
+                      textShadow: isCurrent ? `0 0 10px ${ax.colorBright}` : 'none',
+                      transition: 'all 0.3s ease',
+                    }}
+                  >
+                    {i}
+                  </div>
+                </Html>
+              );
+            })}
           </group>
         );
       })}
