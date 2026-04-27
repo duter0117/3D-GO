@@ -3,7 +3,7 @@
 // 3D Go Game — Connection Lines (Electric Current via Cylinders)
 // ==============================
 
-import { useRef, useMemo } from 'react';
+import { useRef, useMemo, useEffect } from 'react';
 import * as THREE from 'three';
 import { useFrame } from '@react-three/fiber';
 import { useGameStore } from '../../store/gameStore';
@@ -130,13 +130,13 @@ function WireGroup({
 }) {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const meshRef = useRef<any>(null);
-
-  // 用 InstancedMesh 高效渲染所有同色線段
   const count = conns.length;
+  const maxCount = Math.max(count, 1);
 
-  // 設定每條線的 matrix
-  useMemo(() => {
+  // useEffect 確保 ref 已掛載後才設定 matrix
+  useEffect(() => {
     if (!meshRef.current || count === 0) return;
+    const obj = new THREE.Object3D();
     for (let i = 0; i < count; i++) {
       const c = conns[i];
       const from = new THREE.Vector3(c.from.x, c.from.y, c.from.z);
@@ -144,15 +144,15 @@ function WireGroup({
       const mid = from.clone().add(to).multiplyScalar(0.5);
       const dist = from.distanceTo(to);
 
-      tempObj.position.copy(mid);
-      tempObj.lookAt(to);
-      tempObj.scale.set(1, 1, dist);
-      tempObj.updateMatrix();
-      meshRef.current.setMatrixAt(i, tempObj.matrix);
+      obj.position.copy(mid);
+      obj.lookAt(to);
+      obj.scale.set(1, 1, dist);
+      obj.updateMatrix();
+      meshRef.current.setMatrixAt(i, obj.matrix);
     }
+    meshRef.current.count = count;
     meshRef.current.instanceMatrix.needsUpdate = true;
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [conns, count, meshRef.current]);
+  }, [conns, count]);
 
   // 閃爍動畫
   useFrame(({ clock }) => {
@@ -166,7 +166,7 @@ function WireGroup({
   if (count === 0) return null;
 
   return (
-    <instancedMesh ref={meshRef} args={[sharedCylGeo, undefined, Math.max(count, 1)]} frustumCulled={false}>
+    <instancedMesh ref={meshRef} args={[sharedCylGeo, undefined, maxCount]} frustumCulled={false}>
       <meshBasicMaterial color={color} transparent opacity={baseOpacity} depthWrite={false} />
     </instancedMesh>
   );
