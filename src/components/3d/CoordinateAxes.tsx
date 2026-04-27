@@ -13,10 +13,10 @@ interface AxesProps {
 
 export function CoordinateAxes({ size }: AxesProps) {
   const max = size - 1;
-  const extend = 1.2; // 軸線延伸量
+  const extend = 1.2;
   const labelOffset = 0.6;
 
-  const { xGeo, yGeo, zGeo } = useMemo(() => {
+  const axisGeometry = useMemo(() => {
     const xPts = [
       new THREE.Vector3(-extend, 0, 0),
       new THREE.Vector3(max + extend, 0, 0),
@@ -29,11 +29,23 @@ export function CoordinateAxes({ size }: AxesProps) {
       new THREE.Vector3(0, 0, -extend),
       new THREE.Vector3(0, 0, max + extend),
     ];
-    return {
-      xGeo: new THREE.BufferGeometry().setFromPoints(xPts),
-      yGeo: new THREE.BufferGeometry().setFromPoints(yPts),
-      zGeo: new THREE.BufferGeometry().setFromPoints(zPts),
-    };
+
+    // 把 3 條軸合成一個 lineSegments 幾何
+    const allPts = [...xPts, ...yPts, ...zPts];
+    const geo = new THREE.BufferGeometry().setFromPoints(allPts);
+
+    // 每條線 2 個頂點，3 條線共 6 頂點，設定 per-vertex color
+    const colors = new Float32Array([
+      // X — 紅
+      0.8, 0.2, 0.2, 0.8, 0.2, 0.2,
+      // Y — 綠
+      0.13, 0.67, 0.27, 0.13, 0.67, 0.27,
+      // Z — 藍
+      0.2, 0.4, 0.8, 0.2, 0.4, 0.8,
+    ]);
+    geo.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+
+    return geo;
   }, [max, extend]);
 
   const labelStyle: React.CSSProperties = {
@@ -47,46 +59,35 @@ export function CoordinateAxes({ size }: AxesProps) {
 
   return (
     <group>
-      {/* X 軸 — 紅色 */}
-      <line geometry={xGeo}>
-        <lineBasicMaterial color="#cc3333" opacity={0.6} transparent linewidth={1} />
-      </line>
+      {/* 軸線 */}
+      <lineSegments geometry={axisGeometry}>
+        <lineBasicMaterial vertexColors transparent opacity={0.6} />
+      </lineSegments>
+
+      {/* 軸標籤 */}
       <Html position={[max + extend + labelOffset, 0, 0]} center style={{ pointerEvents: 'none' }}>
         <div style={{ ...labelStyle, color: '#cc3333' }}>X</div>
       </Html>
-
-      {/* Y 軸 — 綠色 */}
-      <line geometry={yGeo}>
-        <lineBasicMaterial color="#22aa44" opacity={0.6} transparent linewidth={1} />
-      </line>
       <Html position={[0, max + extend + labelOffset, 0]} center style={{ pointerEvents: 'none' }}>
         <div style={{ ...labelStyle, color: '#22aa44' }}>Y</div>
       </Html>
-
-      {/* Z 軸 — 藍色 */}
-      <line geometry={zGeo}>
-        <lineBasicMaterial color="#3366cc" opacity={0.6} transparent linewidth={1} />
-      </line>
       <Html position={[0, 0, max + extend + labelOffset]} center style={{ pointerEvents: 'none' }}>
         <div style={{ ...labelStyle, color: '#3366cc' }}>Z</div>
       </Html>
 
-      {/* 原點刻度數字 */}
+      {/* 刻度數字 */}
       {Array.from({ length: size }).map((_, i) => (
         <group key={`ticks-${i}`}>
-          {/* X 軸刻度 */}
           <Html position={[i, -0.6, 0]} center style={{ pointerEvents: 'none' }}>
             <div style={{ color: '#cc333388', fontSize: '9px', fontFamily: "'JetBrains Mono', monospace" }}>
               {i}
             </div>
           </Html>
-          {/* Y 軸刻度 */}
           <Html position={[-0.6, i, 0]} center style={{ pointerEvents: 'none' }}>
             <div style={{ color: '#22aa4488', fontSize: '9px', fontFamily: "'JetBrains Mono', monospace" }}>
               {i}
             </div>
           </Html>
-          {/* Z 軸刻度 */}
           <Html position={[0, -0.6, i]} center style={{ pointerEvents: 'none' }}>
             <div style={{ color: '#3366cc88', fontSize: '9px', fontFamily: "'JetBrains Mono', monospace" }}>
               {i}

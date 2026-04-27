@@ -133,11 +133,15 @@ export function ConnectionLines() {
     };
   }, [connections]);
 
-  // 動畫 refs
-  const blueSolidMatRef = useRef<THREE.LineDashedMaterial>(null);
-  const redSolidMatRef = useRef<THREE.LineDashedMaterial>(null);
-  const bluePendingMatRef = useRef<THREE.LineDashedMaterial>(null);
-  const redPendingMatRef = useRef<THREE.LineDashedMaterial>(null);
+  // 動畫 refs — dashOffset 在 runtime 存在但 TS 型別不含
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const blueSolidMatRef = useRef<any>(null);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const redSolidMatRef = useRef<any>(null);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const bluePendingMatRef = useRef<any>(null);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const redPendingMatRef = useRef<any>(null);
 
   useFrame(({ clock }) => {
     const t = clock.getElapsedTime();
