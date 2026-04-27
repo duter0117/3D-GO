@@ -13,7 +13,7 @@ const GameCanvas = dynamic(
 
 export default function Home() {
   return (
-    <main style={{ width: '100vw', height: '100vh', position: 'relative' }}>
+    <main style={{ width: '100vw', height: '100vh', position: 'relative', background: '#e8ecf4' }}>
       {/* 標題 */}
       <div className="game-title">
         3D GO<span>空間圍棋</span>

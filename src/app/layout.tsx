@@ -13,7 +13,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="zh-Hant">
-      <body>{children}</body>
+      <body style={{ background: '#e8ecf4', margin: 0 }}>{children}</body>
     </html>
   );
 }
