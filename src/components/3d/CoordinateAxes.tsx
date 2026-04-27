@@ -100,7 +100,7 @@ export function CoordinateAxes({ size }: AxesProps) {
                   <div
                     style={{
                       color: isCurrent ? ax.colorBright : tickColor,
-                      fontSize: isCurrent ? '14px' : tickFontSize,
+                      fontSize: isCurrent ? '18px' : tickFontSize,
                       fontWeight: isCurrent ? 800 : isActive ? 600 : 400,
                       fontFamily: "'JetBrains Mono', monospace",
                       textShadow: isCurrent ? `0 0 10px ${ax.colorBright}` : 'none',
