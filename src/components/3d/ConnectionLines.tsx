@@ -1,6 +1,6 @@
 'use client';
 // ==============================
-// 3D Go Game — Connection Lines (Electric Current)
+// 3D Go Game — Connection Lines (Electric Current via Cylinders)
 // ==============================
 
 import { useRef, useMemo } from 'react';
@@ -16,7 +16,13 @@ const HALF_DIRS: Position[] = [
   { x: 0, y: 0, z: 1 },
 ];
 
-interface Connection {
+const WIRE_RADIUS = 0.025;
+const WIRE_SEGMENTS = 6;
+const sharedCylGeo = new THREE.CylinderGeometry(WIRE_RADIUS, WIRE_RADIUS, 1, WIRE_SEGMENTS);
+// 預設圓柱沿 Y 軸，旋轉到沿 Z 軸方便 lookAt
+sharedCylGeo.rotateX(Math.PI / 2);
+
+interface Conn {
   from: Position;
   to: Position;
   sameColor: boolean;
@@ -29,12 +35,11 @@ export function ConnectionLines() {
   const pendingMoves = useGameStore((s) => s.pendingMoves);
   const currentPlayer = useGameStore((s) => s.currentPlayer);
 
-  // 收集所有連接
   const connections = useMemo(() => {
-    const conns: Connection[] = [];
+    const conns: Conn[] = [];
     const pendingSet = new Set(pendingMoves.map((p) => `${p.x},${p.y},${p.z}`));
 
-    // 建立包含 pending 的合併棋盤
+    // 合併棋盤
     const combined: (string | null)[][][] = [];
     for (let x = 0; x < boardSize; x++) {
       combined[x] = [];
@@ -81,155 +86,88 @@ export function ConnectionLines() {
     return conns;
   }, [board, boardSize, pendingMoves, currentPlayer]);
 
-  // 分成 4 組幾何
-  const geometries = useMemo(() => {
-    const groups = {
-      blueSolid: [] as THREE.Vector3[],
-      redSolid: [] as THREE.Vector3[],
-      bluePending: [] as THREE.Vector3[],
-      redPending: [] as THREE.Vector3[],
+  // 分 4 組
+  const groups = useMemo(() => {
+    const result = {
+      blueSolid: [] as Conn[],
+      redSolid: [] as Conn[],
+      bluePending: [] as Conn[],
+      redPending: [] as Conn[],
     };
-
-    for (const conn of connections) {
-      const from = new THREE.Vector3(conn.from.x, conn.from.y, conn.from.z);
-      const to = new THREE.Vector3(conn.to.x, conn.to.y, conn.to.z);
-
-      if (conn.sameColor) {
-        if (conn.isPending) {
-          groups.bluePending.push(from, to);
-        } else {
-          groups.blueSolid.push(from, to);
-        }
+    for (const c of connections) {
+      if (c.sameColor) {
+        (c.isPending ? result.bluePending : result.blueSolid).push(c);
       } else {
-        if (conn.isPending) {
-          groups.redPending.push(from, to);
-        } else {
-          groups.redSolid.push(from, to);
-        }
+        (c.isPending ? result.redPending : result.redSolid).push(c);
       }
     }
-
-    const makeGeo = (pts: THREE.Vector3[]) => {
-      if (pts.length === 0) return null;
-      const geo = new THREE.BufferGeometry().setFromPoints(pts);
-      // computeLineDistances 讓 LineDashedMaterial 生效
-      const positions = geo.attributes.position;
-      const distances = new Float32Array(positions.count);
-      for (let i = 0; i < positions.count; i += 2) {
-        const a = new THREE.Vector3().fromBufferAttribute(positions, i);
-        const b = new THREE.Vector3().fromBufferAttribute(positions, i + 1);
-        distances[i] = 0;
-        distances[i + 1] = a.distanceTo(b);
-      }
-      geo.setAttribute('lineDistance', new THREE.BufferAttribute(distances, 1));
-      return geo;
-    };
-
-    return {
-      blueSolid: makeGeo(groups.blueSolid),
-      redSolid: makeGeo(groups.redSolid),
-      bluePending: makeGeo(groups.bluePending),
-      redPending: makeGeo(groups.redPending),
-    };
+    return result;
   }, [connections]);
-
-  // 動畫 refs — dashOffset 在 runtime 存在但 TS 型別不含
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const blueSolidMatRef = useRef<any>(null);
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const redSolidMatRef = useRef<any>(null);
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const bluePendingMatRef = useRef<any>(null);
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const redPendingMatRef = useRef<any>(null);
-
-  useFrame(({ clock }) => {
-    const t = clock.getElapsedTime();
-
-    // 電流流動效果：dashOffset 動畫 + 閃爍 opacity
-    const flow = t * 0.8;
-    const flicker = 0.5 + Math.sin(t * 8) * 0.15 + Math.sin(t * 13) * 0.1;
-    const flickerPending = 0.3 + Math.sin(t * 6) * 0.1 + Math.sin(t * 11) * 0.08;
-
-    if (blueSolidMatRef.current) {
-      blueSolidMatRef.current.dashOffset = -flow;
-      blueSolidMatRef.current.opacity = flicker;
-    }
-    if (redSolidMatRef.current) {
-      redSolidMatRef.current.dashOffset = -flow;
-      redSolidMatRef.current.opacity = flicker;
-    }
-    if (bluePendingMatRef.current) {
-      bluePendingMatRef.current.dashOffset = -flow * 1.3;
-      bluePendingMatRef.current.opacity = flickerPending;
-    }
-    if (redPendingMatRef.current) {
-      redPendingMatRef.current.dashOffset = -flow * 1.3;
-      redPendingMatRef.current.opacity = flickerPending;
-    }
-  });
 
   return (
     <group>
-      {/* 同色連接 — 藍色電流 */}
-      {geometries.blueSolid && (
-        <lineSegments geometry={geometries.blueSolid}>
-          <lineDashedMaterial
-            ref={blueSolidMatRef}
-            color="#4488ff"
-            dashSize={0.12}
-            gapSize={0.08}
-            transparent
-            opacity={0.6}
-            linewidth={1}
-          />
-        </lineSegments>
-      )}
-
-      {/* 異色連接 — 紅色電流 */}
-      {geometries.redSolid && (
-        <lineSegments geometry={geometries.redSolid}>
-          <lineDashedMaterial
-            ref={redSolidMatRef}
-            color="#ff4444"
-            dashSize={0.12}
-            gapSize={0.08}
-            transparent
-            opacity={0.6}
-            linewidth={1}
-          />
-        </lineSegments>
-      )}
-
-      {/* Pending 同色 — 淡藍色電流 */}
-      {geometries.bluePending && (
-        <lineSegments geometry={geometries.bluePending}>
-          <lineDashedMaterial
-            ref={bluePendingMatRef}
-            color="#88bbff"
-            dashSize={0.1}
-            gapSize={0.1}
-            transparent
-            opacity={0.35}
-            linewidth={1}
-          />
-        </lineSegments>
-      )}
-
-      {/* Pending 異色 — 淡紅色電流 */}
-      {geometries.redPending && (
-        <lineSegments geometry={geometries.redPending}>
-          <lineDashedMaterial
-            ref={redPendingMatRef}
-            color="#ff8888"
-            dashSize={0.1}
-            gapSize={0.1}
-            transparent
-            opacity={0.35}
-            linewidth={1}
-          />
-        </lineSegments>
-      )}
+      <WireGroup conns={groups.blueSolid} color="#4488ff" baseOpacity={0.55} speed={8} />
+      <WireGroup conns={groups.redSolid} color="#ff4444" baseOpacity={0.55} speed={8} />
+      <WireGroup conns={groups.bluePending} color="#88bbff" baseOpacity={0.3} speed={6} />
+      <WireGroup conns={groups.redPending} color="#ff8888" baseOpacity={0.3} speed={6} />
     </group>
+  );
+}
+
+const tempObj = new THREE.Object3D();
+const tempVec = new THREE.Vector3();
+
+function WireGroup({
+  conns,
+  color,
+  baseOpacity,
+  speed,
+}: {
+  conns: Conn[];
+  color: string;
+  baseOpacity: number;
+  speed: number;
+}) {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const meshRef = useRef<any>(null);
+
+  // 用 InstancedMesh 高效渲染所有同色線段
+  const count = conns.length;
+
+  // 設定每條線的 matrix
+  useMemo(() => {
+    if (!meshRef.current || count === 0) return;
+    for (let i = 0; i < count; i++) {
+      const c = conns[i];
+      const from = new THREE.Vector3(c.from.x, c.from.y, c.from.z);
+      const to = new THREE.Vector3(c.to.x, c.to.y, c.to.z);
+      const mid = from.clone().add(to).multiplyScalar(0.5);
+      const dist = from.distanceTo(to);
+
+      tempObj.position.copy(mid);
+      tempObj.lookAt(to);
+      tempObj.scale.set(1, 1, dist);
+      tempObj.updateMatrix();
+      meshRef.current.setMatrixAt(i, tempObj.matrix);
+    }
+    meshRef.current.instanceMatrix.needsUpdate = true;
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [conns, count, meshRef.current]);
+
+  // 閃爍動畫
+  useFrame(({ clock }) => {
+    if (meshRef.current?.material) {
+      const t = clock.getElapsedTime();
+      const flicker = baseOpacity + Math.sin(t * speed) * 0.12 + Math.sin(t * speed * 1.6) * 0.08;
+      meshRef.current.material.opacity = flicker;
+    }
+  });
+
+  if (count === 0) return null;
+
+  return (
+    <instancedMesh ref={meshRef} args={[sharedCylGeo, undefined, Math.max(count, 1)]} frustumCulled={false}>
+      <meshBasicMaterial color={color} transparent opacity={baseOpacity} depthWrite={false} />
+    </instancedMesh>
   );
 }
