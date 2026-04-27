@@ -28,6 +28,9 @@ export function GameCanvas() {
       style={{ background: '#e8ecf4' }}
       gl={{ antialias: true, alpha: false }}
     >
+      {/* Three.js 場景背景色 */}
+      <color attach="background" args={['#e8ecf4']} />
+
       {/* 環境光 — 亮色場景 */}
       <ambientLight intensity={0.8} color="#ffffff" />
       <directionalLight position={[10, 15, 10]} intensity={1.2} color="#ffffff" />
