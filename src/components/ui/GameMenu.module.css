@@ -1,0 +1,122 @@
+/* ==============================
+   GameMenu Styles (Light Theme)
+   ============================== */
+
+.container {
+  position: absolute;
+  top: 24px;
+  right: 24px;
+  z-index: 20;
+  font-family: 'Outfit', sans-serif;
+  user-select: none;
+}
+
+.menuBtn {
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 12px;
+  border: 1px solid rgba(80, 100, 180, 0.2);
+  background: rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(10px);
+  color: #5566888;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+.menuBtn:hover {
+  background: rgba(240, 243, 255, 0.95);
+  color: #3355aa;
+  border-color: rgba(80, 100, 180, 0.4);
+}
+
+.dropdown {
+  position: absolute;
+  top: 52px;
+  right: 0;
+  min-width: 200px;
+  padding: 6px;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(20px);
+  border-radius: 12px;
+  border: 1px solid rgba(80, 100, 180, 0.15);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+  animation: slideDown 0.15s ease;
+}
+
+.menuItem {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 10px 14px;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: #3a3a5a;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  font-family: 'Outfit', sans-serif;
+  text-align: left;
+}
+
+.menuItem:hover:not(:disabled) {
+  background: rgba(230, 235, 255, 0.8);
+  color: #2a2a4a;
+}
+
+.menuItem:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.dangerItem:hover:not(:disabled) {
+  background: rgba(255, 230, 230, 0.8);
+  color: #993333;
+}
+
+.sizeSelect {
+  display: flex;
+  gap: 6px;
+  padding: 6px 14px 10px;
+}
+
+.sizeBtn {
+  flex: 1;
+  padding: 6px;
+  border-radius: 6px;
+  border: 1px solid rgba(80, 100, 180, 0.15);
+  background: rgba(245, 247, 255, 0.8);
+  color: #5566888;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  font-family: 'Outfit', sans-serif;
+}
+
+.sizeBtn:hover {
+  border-color: rgba(80, 100, 180, 0.4);
+  color: #3355aa;
+}
+
+.sizeBtn.sizeActive {
+  background: rgba(220, 230, 255, 0.9);
+  border-color: rgba(80, 100, 180, 0.4);
+  color: #3355aa;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

@@ -1,0 +1,129 @@
+/* ==============================
+   SliceControls Styles (Light Theme)
+   ============================== */
+
+.container {
+  position: absolute;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 18px;
+  background: rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(12px);
+  border-radius: 14px;
+  border: 1px solid rgba(80, 100, 180, 0.15);
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+  z-index: 10;
+  font-family: 'Outfit', sans-serif;
+  user-select: none;
+}
+
+.toggleBtn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  border-radius: 8px;
+  border: 1px solid rgba(80, 100, 180, 0.2);
+  background: rgba(240, 243, 255, 0.8);
+  color: #5566888;
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-family: 'Outfit', sans-serif;
+}
+
+.toggleBtn:hover {
+  background: rgba(230, 235, 255, 0.9);
+  color: #3355aa;
+}
+
+.toggleBtn.active {
+  background: rgba(220, 230, 255, 0.9);
+  border-color: rgba(80, 100, 180, 0.4);
+  color: #3355aa;
+  box-shadow: 0 0 8px rgba(80, 100, 200, 0.15);
+}
+
+.axisGroup {
+  display: flex;
+  gap: 4px;
+}
+
+.axisBtn {
+  padding: 4px 12px;
+  border-radius: 6px;
+  border: 1px solid rgba(80, 100, 180, 0.15);
+  background: rgba(245, 247, 255, 0.8);
+  color: #8899aa;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  font-family: 'Outfit', sans-serif;
+}
+
+.axisBtn:hover {
+  color: #3355aa;
+  border-color: rgba(80, 100, 180, 0.3);
+}
+
+.axisBtn.axisActive {
+  background: rgba(220, 230, 255, 0.9);
+  color: #3355aa;
+  border-color: rgba(80, 100, 180, 0.4);
+}
+
+.sliderGroup {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.sliderLabel {
+  font-size: 12px;
+  color: #5566888;
+  min-width: 55px;
+  font-family: 'JetBrains Mono', monospace;
+}
+
+.slider {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 120px;
+  height: 4px;
+  background: rgba(80, 100, 180, 0.15);
+  border-radius: 2px;
+  outline: none;
+}
+
+.slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 16px;
+  height: 16px;
+  background: #4466cc;
+  border-radius: 50%;
+  cursor: pointer;
+  box-shadow: 0 0 6px rgba(80, 100, 200, 0.3);
+  transition: all 0.15s ease;
+}
+
+.slider::-webkit-slider-thumb:hover {
+  background: #3355bb;
+  box-shadow: 0 0 10px rgba(80, 100, 200, 0.4);
+  transform: scale(1.1);
+}
+
+.slider::-moz-range-thumb {
+  width: 16px;
+  height: 16px;
+  background: #4466cc;
+  border-radius: 50%;
+  cursor: pointer;
+  border: none;
+  box-shadow: 0 0 6px rgba(80, 100, 200, 0.3);
+}
