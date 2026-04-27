@@ -16,7 +16,7 @@ const HALF_DIRS: Position[] = [
   { x: 0, y: 0, z: 1 },
 ];
 
-const WIRE_RADIUS = 0.025;
+const WIRE_RADIUS = 0.117; // 1/3 球體直徑
 const WIRE_SEGMENTS = 6;
 const sharedCylGeo = new THREE.CylinderGeometry(WIRE_RADIUS, WIRE_RADIUS, 1, WIRE_SEGMENTS);
 // 預設圓柱沿 Y 軸，旋轉到沿 Z 軸方便 lookAt
