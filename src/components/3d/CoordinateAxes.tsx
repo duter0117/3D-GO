@@ -1,100 +1,115 @@
 'use client';
 // ==============================
-// 3D Go Game — Coordinate Axes
+// 3D Go Game — Coordinate Axes (slice-aware highlight)
 // ==============================
 
 import { useMemo } from 'react';
 import * as THREE from 'three';
 import { Html } from '@react-three/drei';
+import { useGameStore } from '../../store/gameStore';
 
 interface AxesProps {
   size: number;
 }
 
+const AXES = [
+  { axis: 'x' as const, color: '#cc3333', colorBright: '#ff4444', rgb: [0.8, 0.2, 0.2] },
+  { axis: 'y' as const, color: '#22aa44', colorBright: '#33ff66', rgb: [0.13, 0.67, 0.27] },
+  { axis: 'z' as const, color: '#3366cc', colorBright: '#4488ff', rgb: [0.2, 0.4, 0.8] },
+] as const;
+
 export function CoordinateAxes({ size }: AxesProps) {
   const max = size - 1;
   const extend = 1.2;
   const labelOffset = 0.6;
+  const showSlice = useGameStore((s) => s.showSlice);
+  const sliceAxis = useGameStore((s) => s.sliceAxis);
 
-  const axisGeometry = useMemo(() => {
-    const xPts = [
-      new THREE.Vector3(-extend, 0, 0),
-      new THREE.Vector3(max + extend, 0, 0),
+  // 每條軸獨立幾何
+  const geos = useMemo(() => {
+    const dirs: [THREE.Vector3, THREE.Vector3][] = [
+      [new THREE.Vector3(-extend, 0, 0), new THREE.Vector3(max + extend, 0, 0)],
+      [new THREE.Vector3(0, -extend, 0), new THREE.Vector3(0, max + extend, 0)],
+      [new THREE.Vector3(0, 0, -extend), new THREE.Vector3(0, 0, max + extend)],
     ];
-    const yPts = [
-      new THREE.Vector3(0, -extend, 0),
-      new THREE.Vector3(0, max + extend, 0),
-    ];
-    const zPts = [
-      new THREE.Vector3(0, 0, -extend),
-      new THREE.Vector3(0, 0, max + extend),
-    ];
-
-    // 把 3 條軸合成一個 lineSegments 幾何
-    const allPts = [...xPts, ...yPts, ...zPts];
-    const geo = new THREE.BufferGeometry().setFromPoints(allPts);
-
-    // 每條線 2 個頂點，3 條線共 6 頂點，設定 per-vertex color
-    const colors = new Float32Array([
-      // X — 紅
-      0.8, 0.2, 0.2, 0.8, 0.2, 0.2,
-      // Y — 綠
-      0.13, 0.67, 0.27, 0.13, 0.67, 0.27,
-      // Z — 藍
-      0.2, 0.4, 0.8, 0.2, 0.4, 0.8,
-    ]);
-    geo.setAttribute('color', new THREE.BufferAttribute(colors, 3));
-
-    return geo;
+    return dirs.map(([a, b]) => new THREE.BufferGeometry().setFromPoints([a, b]));
   }, [max, extend]);
 
-  const labelStyle: React.CSSProperties = {
-    pointerEvents: 'none',
-    userSelect: 'none',
-    fontSize: '14px',
-    fontWeight: 700,
-    fontFamily: "'Outfit', sans-serif",
-    letterSpacing: '1px',
-  };
+  const labelPositions: [number, number, number][] = [
+    [max + extend + labelOffset, 0, 0],
+    [0, max + extend + labelOffset, 0],
+    [0, 0, max + extend + labelOffset],
+  ];
+
+  const tickPositions: ((i: number) => [number, number, number])[] = [
+    (i) => [i, -0.6, 0],
+    (i) => [-0.6, i, 0],
+    (i) => [0, -0.6, i],
+  ];
 
   return (
     <group>
-      {/* 軸線 */}
-      <lineSegments geometry={axisGeometry}>
-        <lineBasicMaterial vertexColors transparent opacity={0.6} />
-      </lineSegments>
+      {AXES.map((ax, idx) => {
+        const isActive = showSlice && sliceAxis === ax.axis;
+        const lineColor = isActive ? ax.colorBright : ax.color;
+        const lineOpacity = isActive ? 1 : 0.4;
+        const labelColor = isActive ? ax.colorBright : ax.color;
+        const labelFontSize = isActive ? '18px' : '14px';
+        const tickColor = isActive ? ax.color : `${ax.color}88`;
+        const tickFontSize = isActive ? '11px' : '9px';
 
-      {/* 軸標籤 */}
-      <Html position={[max + extend + labelOffset, 0, 0]} center style={{ pointerEvents: 'none' }}>
-        <div style={{ ...labelStyle, color: '#cc3333' }}>X</div>
-      </Html>
-      <Html position={[0, max + extend + labelOffset, 0]} center style={{ pointerEvents: 'none' }}>
-        <div style={{ ...labelStyle, color: '#22aa44' }}>Y</div>
-      </Html>
-      <Html position={[0, 0, max + extend + labelOffset]} center style={{ pointerEvents: 'none' }}>
-        <div style={{ ...labelStyle, color: '#3366cc' }}>Z</div>
-      </Html>
+        return (
+          <group key={ax.axis}>
+            {/* 軸線 */}
+            <lineSegments geometry={geos[idx]}>
+              <lineBasicMaterial color={lineColor} transparent opacity={lineOpacity} />
+            </lineSegments>
 
-      {/* 刻度數字 */}
-      {Array.from({ length: size }).map((_, i) => (
-        <group key={`ticks-${i}`}>
-          <Html position={[i, -0.6, 0]} center style={{ pointerEvents: 'none' }}>
-            <div style={{ color: '#cc333388', fontSize: '9px', fontFamily: "'JetBrains Mono', monospace" }}>
-              {i}
-            </div>
-          </Html>
-          <Html position={[-0.6, i, 0]} center style={{ pointerEvents: 'none' }}>
-            <div style={{ color: '#22aa4488', fontSize: '9px', fontFamily: "'JetBrains Mono', monospace" }}>
-              {i}
-            </div>
-          </Html>
-          <Html position={[0, -0.6, i]} center style={{ pointerEvents: 'none' }}>
-            <div style={{ color: '#3366cc88', fontSize: '9px', fontFamily: "'JetBrains Mono', monospace" }}>
-              {i}
-            </div>
-          </Html>
-        </group>
-      ))}
+            {/* Active 軸的 glow 線 */}
+            {isActive && (
+              <lineSegments geometry={geos[idx]}>
+                <lineBasicMaterial color={ax.colorBright} transparent opacity={0.25} />
+              </lineSegments>
+            )}
+
+            {/* 軸標籤 */}
+            <Html position={labelPositions[idx]} center style={{ pointerEvents: 'none' }}>
+              <div
+                style={{
+                  pointerEvents: 'none',
+                  userSelect: 'none',
+                  fontSize: labelFontSize,
+                  fontWeight: 700,
+                  fontFamily: "'Outfit', sans-serif",
+                  letterSpacing: '1px',
+                  color: labelColor,
+                  textShadow: isActive ? `0 0 12px ${ax.colorBright}` : 'none',
+                  transition: 'all 0.3s ease',
+                }}
+              >
+                {ax.axis.toUpperCase()}
+              </div>
+            </Html>
+
+            {/* 刻度數字 */}
+            {Array.from({ length: size }).map((_, i) => (
+              <Html key={`${ax.axis}-${i}`} position={tickPositions[idx](i)} center style={{ pointerEvents: 'none' }}>
+                <div
+                  style={{
+                    color: tickColor,
+                    fontSize: tickFontSize,
+                    fontWeight: isActive ? 600 : 400,
+                    fontFamily: "'JetBrains Mono', monospace",
+                    transition: 'all 0.3s ease',
+                  }}
+                >
+                  {i}
+                </div>
+              </Html>
+            ))}
+          </group>
+        );
+      })}
     </group>
   );
 }
